@@ -70,6 +70,14 @@ func (q SelectQuery) ToSQL() (string, []interface{}) {
 
 // AppendSQL marshals the SelectQuery into a buffer and args slice.
 func (q SelectQuery) AppendSQL(buf *strings.Builder, args *[]interface{}) {
+	if cte, ok := q.FromTable.(CTE2); ok {
+		q.CTEs = append(q.CTEs, NewCTE(cte.GetName(), cte.GetQuery()))
+	}
+	for _, jointable := range q.JoinTables {
+		if cte, ok := jointable.Table.(CTE2); ok {
+			q.CTEs = append(q.CTEs, NewCTE(cte.GetName(), cte.GetQuery()))
+		}
+	}
 	// WITH
 	if len(q.CTEs) > 0 {
 		q.CTEs.AppendSQL(buf, args)
